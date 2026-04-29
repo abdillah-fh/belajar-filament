@@ -7,255 +7,221 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-// use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-// use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 
 class InvoiceForm
 {
-    protected static function calculateGrandTotal($get, $set)
+    protected static function updateGrandTotal(callable $get, callable $set): void
     {
+        // 1. Ambil semua item dari repeater
         $items = collect($get('items') ?? []);
 
-        $subtotal = $items->sum(fn($item) => $item['subtotal'] ?? 0);
+        // 2. Hitung subtotal (penjumlahan qty * unit_price tiap baris)
+        $subtotal = $items->sum(function ($item) {
+            // Bersihkan format titik jika ada (dari masking)
+            $qty = (float) str_replace('.', '', $item['quantity'] ?? 0);
+            $price = (float) str_replace('.', '', $item['unit_price'] ?? 0);
+            return $qty * $price;
+        });
 
-        $tax = (float) ($get('tax_percentage') ?? 0);
-        $discount = (float) ($get('discount_percentage') ?? 0);
+        // 3. Ambil nilai pajak dan diskon
+        $taxPercent = (float) ($get('tax_percentage') ?? 0);
+        $discountPercent = (float) ($get('discount_percentage') ?? 0);
 
-        $taxAmount = $subtotal * ($tax / 100);
-        $discountAmount = $subtotal * ($discount / 100);
+        // 4. Hitung nominal pajak dan diskon
+        $taxAmount = $subtotal * ($taxPercent / 100);
+        $discountAmount = $subtotal * ($discountPercent / 100);
 
+        // 5. Hitung Grand Total
         $grandTotal = $subtotal + $taxAmount - $discountAmount;
 
-        $set('grand_total_display', 'IDR ' . number_format($grandTotal, 0, ',', '.'));
+        // 6. Update tampilan (display) dan field yang akan disimpan ke DB (total_amount)
+        $set('grand_total_display', number_format($grandTotal, 0, ',', '.'));
+        $set('total_amount', $grandTotal);
     }
 
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            // ->components([
-            //     Select::make('team_id')
-            //         ->relationship('team', 'name')
-            //         ->required(),
-            //     Select::make('client_id')
-            //         ->relationship('client', 'name')
-            //         ->required(),
-            //     TextInput::make('status')
-            //         ->required()
-            //         ->default('unpaid'),
-            //     DatePicker::make('invoice_date')
-            //         ->required(),
-            //     DatePicker::make('due_date')
-            //         ->required(),
-            //     TextInput::make('client_name'),
-            //     TextInput::make('client_email')
-            //         ->email(),
-            //     TextInput::make('client_phone')
-            //         ->tel(),
-            //     TextInput::make('client_address'),
-            //     TextInput::make('client_city'),
-            //     TextInput::make('client_country'),
-            //     TextInput::make('company'),
-            //     Textarea::make('note')
-            //         ->columnSpanFull(),
-            //     TextInput::make('tax_percentage')
-            //         ->required()
-            //         ->numeric()
-            //         ->default(0.0),
-            //     TextInput::make('discount_percentage')
-            //         ->required()
-            //         ->numeric()
-            //         ->default(0.0),
-            //     TextInput::make('total_amount')
-            //         ->required()
-            //         ->numeric()
-            //         ->default(0.0),
-            // ]);
-            // ->columns(1)
+            ->columns(1)
             ->components([
-                Section::make()
-                    ->schema([
-                        Section::make('Detail Invoice')
-                            ->schema([
-                                Grid::make(3)
-                                    ->schema([
-                                        Select::make('status')
-                                            ->options([
-                                                'unpaid' => 'Unpaid',
-                                                'pending' => 'Pending',
-                                                'paid' => 'Paid',
-                                            ])
-                                            ->default('unpaid')
-                                            ->required()
-                                            ->native(false),
-                                        DatePicker::make('invoice_date')
-                                            ->default(now())
-                                            ->required(),
-                                        DatePicker::make('due_date')
-                                            ->required(),
-                                    ])
+                // Section 1 : Detail Invoice
+                Section::make('Detail Invoice')->schema([
+                    Grid::make(3)->schema([
+                        Select::make('status')
+                            ->options([
+                                'unpaid' => 'UNPAID',
+                                'paid' => 'PAID',
+                                'pending' => 'PENDING',
                             ])
-                            ->collapsible(),
-
-                        Section::make('Detail Client')
-                            ->schema([
-                                Grid::make(2)
-                                    ->schema([
-                                        // Kiri
-                                        Section::make()
-                                            ->schema([
-                                                Select::make('client_id')
-                                                    ->label('Name')
-                                                    ->relationship('client', 'name')
-                                                    ->searchable()
-                                                    ->preload()
-                                                    ->live()
-                                                    ->reactive()
-                                                    ->afterStateUpdated(function ($state, callable $set) {
-                                                        $client = Client::find($state);
-
-                                                        if ($client) {
-                                                            $set('client_email', $client->email);
-                                                            $set('client_phone', $client->phone);
-                                                            $set('client_address', $client->address);
-                                                            $set('client_city', $client->city);
-                                                            $set('client_country', $client->country);
-                                                        }
-                                                    })
-                                                    ->createOptionForm([
-                                                        TextInput::make('name')
-                                                            ->required(),
-                                                        TextInput::make('email')
-                                                            ->label('Email address')
-                                                            ->email(),
-                                                        TextInput::make('phone')
-                                                            ->tel(),
-                                                        TextInput::make('address'),
-                                                        TextInput::make('city'),
-                                                        TextInput::make('country'),
-                                                    ])
-                                                    ->required(),
-                                                TextInput::make('client_email')->label('Email')->disabled()->dehydrated(),
-                                                TextInput::make('client_phone')->label('Phone')->disabled()->dehydrated(),
-                                            ])
-                                            ->contained(false),
-                                        // Kanan
-                                        Section::make()
-                                            ->schema([
-                                                TextInput::make('company')->label('Company')->required(),
-                                                TextInput::make('client_address')->label('Address')->disabled()->dehydrated(),
-                                                TextInput::make('client_city')->label('City')->disabled()->dehydrated(),
-                                                TextInput::make('client_country')->label('Country')->disabled()->dehydrated(),
-                                            ])
-                                            ->contained(false),
-                                    ]),
-                            ])
-                            ->collapsible(),
-
-                        Section::make('Detail Items')
-                            ->schema([
-                                Repeater::make('items')
-                                    ->label('Item')
-                                    ->relationship('items')
-                                    ->live()
-                                    ->schema([
-                                        TextInput::make('item_name')
-                                            ->required()
-                                            ->columnSpan(['lg' => 12, 'xl' => 5]),
-
-                                        TextInput::make('quantity')
-                                            ->label('Qty')
-                                            ->numeric()
-                                            ->default(1)
-                                            ->live()
-                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                                $qty = (int) str_replace('.', '', $state ?? 0);
-                                                $price = (int) str_replace('.', '', $get('unit_price') ?? 0);
-
-                                                $subtotal = $qty * $price;
-
-                                                $set('subtotal', $subtotal);
-                                                $set('subtotal_display', 'IDR ' . number_format($subtotal, 0, ',', '.'));
-                                            })
-                                            ->required()
-                                            ->columnSpan(['lg' => 4, 'xl' => 1]),
-
-                                        TextInput::make('unit_price')
-                                            ->numeric()
-                                            ->prefix('IDR')
-                                            ->live()
-                                            ->mask(RawJs::make(<<<'JS'
-                                                $input => {
-                                                    return $input
-                                                        .replace(/\D/g, '')
-                                                        .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-                                                }
-                                            JS))
-                                            ->stripCharacters('.')
-                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                                $qty = (int) str_replace('.', '', $get('quantity') ?? 0);
-                                                $price = (int) str_replace('.', '', $state ?? 0);
-
-                                                $subtotal = $qty * $price;
-
-                                                $set('subtotal', $subtotal);
-                                                $set('subtotal_display', 'IDR ' . number_format($subtotal, 0, ',', '.'));
-                                            })
-                                            ->required()
-                                            ->columnSpan(['lg' => 4, 'xl' => 3]),
-
-                                        // 🔥 DISPLAY SAJA (tidak ada logic di sini)
-                                        TextInput::make('subtotal_display')
-                                            ->label('Subtotal')
-                                            ->disabled()
-                                            ->dehydrated(false)
-                                            ->columnSpan(['lg' => 4, 'xl' => 3]),
-
-                                        Hidden::make('subtotal')
-                                            ->dehydrated(),
-                                    ])
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        self::calculateGrandTotal($get, $set);
-                                    })
-                                    ->columns(12)
-                                    ->addActionLabel('Add item'),
-                            ])
-                            ->collapsible(),
-
-                        Section::make('Summary')
-                            ->schema([
-                                Section::make()
-                                    ->schema([
-                                        TextInput::make('note')->columnSpan(6),
-                                        TextInput::make('tax_percentage')
-                                            ->label('Tax')
-                                            ->numeric()
-                                            ->suffix('%')
-                                            ->afterStateUpdated(fn($state, $set, $get) => self::calculateGrandTotal($get, $set))
-                                            ->default(0)
-                                            ->columnSpan(3),
-                                        TextInput::make('discount_percentage')
-                                            ->label('Discount')
-                                            ->numeric()
-                                            ->suffix('%')
-                                            ->live()
-                                            ->afterStateUpdated(fn($state, $set, $get) => self::calculateGrandTotal($get, $set))
-                                            ->default(0)
-                                            ->columnSpan(3),
-                                    ])->contained(false)->columns(12),
-
-                                TextInput::make('grand_total_display')
-                                    ->label('Grand Total')
-                                    ->disabled()
-                                    ->dehydrated(false),
-                            ])
-                            ->collapsible(),
+                            ->required()
+                            ->default('unpaid')
+                            ->native(false),
+                        DatePicker::make('invoice_date')
+                            ->default(now())
+                            ->native(false)
+                            ->displayFormat('d F Y')
+                            ->required(),
+                        DatePicker::make('due_date')
+                            ->native(false)
+                            ->displayFormat('d F Y')
+                            ->required(),
                     ])
-                    ->columnSpanFull()
+                ])->collapsible(),
+
+
+                // Section 2: Detail Client
+                Section::make('Detail Client')->schema([
+                    Grid::make(2)->schema([
+                        // Kolom Kiri
+                        Section::make()->schema([
+                            Select::make('client_id')
+                                ->label('Name')
+                                ->relationship('client', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->afterStateUpdated(function ($state, $set) {
+                                    $client = Client::find($state);
+                                    if ($client) {
+                                        $set('client_name', $client->name);
+                                        $set('client_email', $client->email);
+                                        $set('client_phone', $client->phone);
+                                        $set('client_address', $client->address);
+                                        $set('client_city', $client->city);
+                                        $set('client_country', $client->country);
+                                    }
+                                })
+                                ->createOptionForm([
+                                    TextInput::make('name')->required(),
+                                    TextInput::make('email')->email(),
+                                    TextInput::make('phone')->tel(),
+                                    TextInput::make('address'),
+                                    TextInput::make('city'),
+                                    TextInput::make('country'),
+                                ])
+                                ->required(),
+                            Hidden::make('client_name')->dehydrated(),
+                            TextInput::make('client_email')->label('Email')->disabled()->dehydrated(),
+                            TextInput::make('client_phone')->label('Phone')->disabled()->dehydrated(),
+                        ])->contained(false),
+
+                        // Kolom Kanan
+                        Section::make()->schema([
+                            TextInput::make('company')->label('Company')->required(),
+                            TextInput::make('client_address')->label('Address')->disabled()->dehydrated(),
+                            TextInput::make('client_city')->label('City')->disabled()->dehydrated(),
+                            TextInput::make('client_country')->label('Country')->disabled()->dehydrated(),
+                        ])->contained(false),
+                    ])
+                ])->collapsible(),
+
+
+                //Section 3: Detail Items
+                Section::make('Detail Items')->schema([
+                    Repeater::make('items')
+                        ->label('Item')
+                        ->relationship('items')
+                        ->live()
+                        ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set))
+                        ->schema([
+                            TextInput::make('item_name')
+                                ->required()
+                                ->columnSpan(['lg' => 12, 'xl' => 5]),
+
+                            TextInput::make('quantity')
+                                ->label('Qty')
+                                ->numeric()
+                                ->minValue(1)
+                                ->default(1)
+                                ->required()
+                                ->columnSpan(['lg' => 4, 'xl' => 1])
+                                ->live(debounce: 500)
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    $qty = (int) ($state ?? 0);
+                                    $price = (int) ($get('unit_price') ?? 0);
+
+                                    // Kalikan dan set ke subtotal_display dengan format ribuan
+                                    $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
+                                }),
+
+                            TextInput::make('unit_price')
+                                ->numeric()
+                                ->prefix('Rp')
+                                ->required()
+                                ->columnSpan(['lg' => 4, 'xl' => 3])
+                                ->live(debounce: 500)
+                                ->mask(RawJs::make(<<<'JS'
+                                    $input => {
+                                        return $input
+                                            .replace(/\D/g, '')
+                                            .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                                    }
+                                JS))
+                                ->stripCharacters('.')
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    $qty = (int) ($get('quantity') ?? 0);
+                                    $price = (int) ($state ?? 0);
+
+                                    // Kalikan dan set ke subtotal_display dengan format ribuan
+                                    $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
+                                }),
+
+                            TextInput::make('subtotal_display')
+                                ->label('Subtotal')
+                                ->prefix('Rp')
+                                ->disabled()
+                                ->dehydrated(false)
+                                ->columnSpan(['lg' => 4, 'xl' => 3]),
+
+                        ])
+                        ->columns(12)
+                        ->addActionLabel('Add item'),
+                ])->collapsible(),
+
+                Section::make('Summary')->schema([
+                    Section::make()->schema([
+                        TextInput::make('note')->columnSpan(6),
+
+                        TextInput::make('tax_percentage')
+                            ->label('Tax %')
+                            ->numeric()
+                            ->suffix('%')
+                            ->default(0)
+                            ->live(debounce: 500)
+                            ->columnSpan(3)
+                            ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set)),
+
+                        TextInput::make('discount_percentage')
+                            ->label('Discount %')
+                            ->numeric()
+                            ->suffix('%')
+                            ->default(0)
+                            ->live(debounce: 500)
+                            ->columnSpan(3)
+                            ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set)),
+                    ])->contained(false)->columns(12),
+
+                    Grid::make(12)->schema([
+                        Group::make()->schema([])->columnSpan(6),
+
+                        Section::make()->schema([
+                            TextInput::make('grand_total_display')
+                                ->hiddenLabel()
+                                ->prefix('Rp')
+                                ->disabled()
+                                ->dehydrated(false),
+
+                            Hidden::make('total_amount')->dehydrated(),
+                        ])->contained(false)->columnSpan(6),
+                    ]),
+
+                ])->collapsible(),
             ]);
     }
 }
