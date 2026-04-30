@@ -29,9 +29,9 @@ return new class extends Migration
             $table->string('company')->nullable();
 
             $table->text('note')->nullable();
-            $table->decimal('tax_percentage', 5, 2)->default(0);
-            $table->decimal('discount_percentage', 5, 2)->default(0);
-            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->integer('tax_percentage')->default(0);
+            $table->integer('discount_percentage')->default(0);
+            $table->bigInteger('total_amount')->default(0);
 
             $table->softDeletes();
             $table->timestamps();
