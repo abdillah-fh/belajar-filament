@@ -9,10 +9,8 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\RawJs;
 
 class InvoiceForm
 {
@@ -156,14 +154,14 @@ class InvoiceForm
                                 ->required()
                                 ->columnSpan(['lg' => 4, 'xl' => 3])
                                 ->live(debounce: 500)
-                                ->mask(RawJs::make(<<<'JS'
-                                    $input => {
-                                        return $input
-                                            .replace(/\D/g, '')
-                                            .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-                                    }
-                                JS))
-                                ->stripCharacters('.')
+                                // ->mask(RawJs::make(<<<'JS'
+                                //     $input => {
+                                //         return $input
+                                //             .replace(/\D/g, '')
+                                //             .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                                //     }
+                                // JS))
+                                // ->stripCharacters('.')
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     $qty = (int) ($get('quantity') ?? 0);
                                     $price = (int) ($state ?? 0);
@@ -177,7 +175,13 @@ class InvoiceForm
                                 ->prefix('Rp')
                                 ->disabled()
                                 ->dehydrated(false)
-                                ->columnSpan(['lg' => 4, 'xl' => 3]),
+                                ->columnSpan(['lg' => 4, 'xl' => 3])
+                                ->afterStateHydrated(function (callable $set, callable $get) {
+                                    $qty = (int) ($get('quantity') ?? 0);
+                                    $price = (int) ($get('unit_price') ?? 0);
+
+                                    $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
+                                }),
 
                         ])
                         ->columns(12)
@@ -207,19 +211,18 @@ class InvoiceForm
                             ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set)),
                     ])->contained(false)->columns(12),
 
-                    Grid::make(12)->schema([
-                        Group::make()->schema([])->columnSpan(6),
+                    Section::make()->schema([
+                        TextInput::make('grand_total_display')
+                            ->label('Grand Total')
+                            ->prefix('Rp')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->afterStateHydrated(function (callable $set, callable $get) {
+                                self::updateGrandTotal($get, $set);
+                            }),
 
-                        Section::make()->schema([
-                            TextInput::make('grand_total_display')
-                                ->hiddenLabel()
-                                ->prefix('Rp')
-                                ->disabled()
-                                ->dehydrated(false),
-
-                            Hidden::make('total_amount')->dehydrated(),
-                        ])->contained(false)->columnSpan(6),
-                    ]),
+                        Hidden::make('total_amount')->dehydrated(),
+                    ])->contained(false),
 
                 ])->collapsible(),
             ]);
