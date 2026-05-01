@@ -62,4 +62,9 @@ class TeamResource extends Resource
     {
         return filament()->getUrl();
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 }
