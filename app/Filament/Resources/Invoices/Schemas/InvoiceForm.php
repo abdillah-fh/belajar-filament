@@ -31,12 +31,17 @@ class InvoiceForm
         $taxPercent = (float) ($get('tax_percentage') ?? 0);
         $discountPercent = (float) ($get('discount_percentage') ?? 0);
 
-        // 4. Hitung nominal pajak dan diskon
-        $taxAmount = $subtotal * ($taxPercent / 100);
+        // 4. Hitung diskon
         $discountAmount = $subtotal * ($discountPercent / 100);
 
-        // 5. Hitung Grand Total
-        $grandTotal = $subtotal + $taxAmount - $discountAmount;
+        // 5. Hitung grand total setelah diskon
+        $grandTotal = $subtotal - $discountAmount;
+
+        // 6. Hitung pajak
+        $taxAmount = $grandTotal * ($taxPercent / 100);
+
+        // 6. Hitung grand total setelah pajak
+        $grandTotal = $grandTotal + $taxAmount;
 
         // 6. Update tampilan (display) dan field yang akan disimpan ke DB (total_amount)
         $set('grand_total_display', number_format($grandTotal, 0, ',', '.'));
@@ -139,10 +144,14 @@ class InvoiceForm
                                 ->default(1)
                                 ->required()
                                 ->columnSpan(['lg' => 4, 'xl' => 1])
-                                ->live(debounce: 500)
+                                ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     $qty = (int) ($state ?? 0);
                                     $price = (int) ($get('unit_price') ?? 0);
+                                    $subtotal = $qty * $price;
+
+                                    // Update nilai murni ke DB
+                                    $set('subtotal', $subtotal);
 
                                     // Kalikan dan set ke subtotal_display dengan format ribuan
                                     $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
@@ -153,7 +162,7 @@ class InvoiceForm
                                 ->prefix('Rp')
                                 ->required()
                                 ->columnSpan(['lg' => 4, 'xl' => 3])
-                                ->live(debounce: 500)
+                                ->live(onBlur: true)
                                 // ->mask(RawJs::make(<<<'JS'
                                 //     $input => {
                                 //         return $input
@@ -165,6 +174,9 @@ class InvoiceForm
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     $qty = (int) ($get('quantity') ?? 0);
                                     $price = (int) ($state ?? 0);
+                                    $subtotal = $qty * $price;
+
+                                    $set('subtotal', $subtotal);
 
                                     // Kalikan dan set ke subtotal_display dengan format ribuan
                                     $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
@@ -182,6 +194,7 @@ class InvoiceForm
 
                                     $set('subtotal_display', number_format($qty * $price, 0, ',', '.'));
                                 }),
+                            Hidden::make('subtotal')->default(0),
 
                         ])
                         ->columns(12)
@@ -192,8 +205,8 @@ class InvoiceForm
                     Section::make()->schema([
                         TextInput::make('note')->columnSpan(6),
 
-                        TextInput::make('tax_percentage')
-                            ->label('Tax %')
+                        TextInput::make('discount_percentage')
+                            ->label('Discount %')
                             ->numeric()
                             ->suffix('%')
                             ->default(0)
@@ -201,8 +214,8 @@ class InvoiceForm
                             ->columnSpan(3)
                             ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set)),
 
-                        TextInput::make('discount_percentage')
-                            ->label('Discount %')
+                        TextInput::make('tax_percentage')
+                            ->label('Tax %')
                             ->numeric()
                             ->suffix('%')
                             ->default(0)
