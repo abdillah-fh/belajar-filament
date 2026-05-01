@@ -8,6 +8,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
@@ -17,15 +18,14 @@ class UserForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->columns(2)
+            ->columns(1)
             ->components([
-                Section::make()->schema([
+                Grid::make()->schema([
                     Toggle::make('is_superadmin')
                         ->label('Super Admin')
                         ->inline(false),
                     Select::make('teams')
                         ->relationship('teams', 'name')
-                        ->required()
                         ->searchable()
                         ->multiple()
                         ->preload()
@@ -52,7 +52,7 @@ class UserForm
                         ->required(),
                     TextInput::make('password')
                         ->password()
-                        ->required(fn(Page $livewire): bool => $livewire instanceof CreateRecord)
+                        ->required(fn(string $operation): bool => $operation === 'create')
                         ->same('passwordConfirmation') // Validasi harus sama dengan konfirmasi
                         // Hanya simpan (dehydrate) jika user mengetik sesuatu
                         ->dehydrated(fn($state) => filled($state))
@@ -63,12 +63,12 @@ class UserForm
                     TextInput::make('passwordConfirmation')
                         ->label('Confirm Password')
                         ->password()
-                        ->required(fn(Page $livewire): bool => $livewire instanceof CreateRecord)
+                        ->required(fn(string $operation): bool => $operation === 'create')
                         ->dehydrated(false) // Tidak perlu disimpan ke DB
                         ->revealable()
                         ->aboveContent('Leave empty if you don\'t want to change your password.'),
 
-                ])->contained(false),
+                ]),
             ]);
     }
 }

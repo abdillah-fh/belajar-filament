@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Support\Icons\Heroicon;
@@ -17,7 +18,8 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('teams.name')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('No team yet'),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
@@ -43,6 +45,7 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
