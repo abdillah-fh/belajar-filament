@@ -207,6 +207,7 @@ class InvoiceForm
 
                         TextInput::make('discount_percentage')
                             ->label('Discount %')
+                            ->required()
                             ->numeric()
                             ->suffix('%')
                             ->default(0)
@@ -216,6 +217,7 @@ class InvoiceForm
 
                         TextInput::make('tax_percentage')
                             ->label('Tax %')
+                            ->required()
                             ->numeric()
                             ->suffix('%')
                             ->default(0)
