@@ -21,8 +21,8 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
-    public function client(): BelongsTo
+    public function quotation(): BelongsTo
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(Quotation::class);
     }
 }
