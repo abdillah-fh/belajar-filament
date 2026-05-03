@@ -2,9 +2,12 @@
 
 namespace App\Providers\Filament;
 
+// use App\Filament\Pages\Profile;
+use App\Filament\Pages\Settings;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -13,18 +16,16 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+use Filament\View\PanelsRenderHook;
+// use Filament\Widgets\AccountWidget;
+// use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\View\PanelsRenderHook;
-use Illuminate\Contracts\View\View;
-use App\Filament\Pages\Settings;
-use Filament\Actions\Action;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -51,12 +52,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
                 fn(): View => view('filament.hooks.create-invoice-button'),
             )
-            // ->userMenuItems([
-            //     Action::make('settings')
-            //         ->url(fn(): string => Settings::getUrl())
-            //         ->icon('heroicon-o-cog-6-tooth'),
-
-            // ])
+            ->userMenuItems([
+                Action::make('settings')
+                    ->url(fn(): string => Settings::getUrl())
+                    ->icon('heroicon-o-cog-6-tooth'),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
