@@ -16,8 +16,8 @@ class Client extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function invoices(): HasMany
+    public function quotations(): HasMany
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(Quotation::class);
     }
 }
