@@ -74,6 +74,13 @@ class InvoiceForm
                                     $set('quotation_id', null);
                                     return;
                                 }
+                            })
+                            ->afterStateHydrated(function ($state, callable $set, $record) {
+                                if ($record && $record->quotation_id) {
+                                    $set('is_active', 'yes');
+                                } else {
+                                    $set('is_active', 'no');
+                                }
                             }),
 
                         Select::make('quotation_id')
