@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->foreignId('quotation_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('status')->default('unpaid'); // unpaid, pending, paid
             $table->date('invoice_date');
