@@ -114,7 +114,7 @@ class QuotationsTable
                 Action::make('cetak_pdf')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success') // Memberi warna hijau
-                    // ->url(fn(Quotation $record) => route('quotation.pdf', $record))
+                    ->url(fn(Quotation $record) => route('quotation.pdf', $record))
                     ->openUrlInNewTab() // Buka di tab baru agar aplikasi tidak tertutup
                     ->iconButton()
                     ->tooltip('Download'),
