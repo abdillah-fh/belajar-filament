@@ -20,21 +20,24 @@ class ClientsTable
     {
         return $table
             ->columns([
-                TextColumn::make('team.name')
-                    ->searchable(),
                 TextColumn::make('name')
+                    ->label('Nama')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Email')
                     ->searchable(),
                 TextColumn::make('phone')
+                    ->label('No HP')
                     ->searchable(),
                 TextColumn::make('address')
+                    ->label('Alamat')
                     ->searchable(),
                 TextColumn::make('city')
+                    ->label('Kota/Kab')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('country')
+                    ->label('Negara')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('created_at')
