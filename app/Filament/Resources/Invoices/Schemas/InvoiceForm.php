@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Schemas;
 
-use App\Models\Client;
+use App\Models\Quotation;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -53,7 +53,66 @@ class InvoiceForm
         return $schema
             ->columns(1)
             ->components([
-                // Section 1 : Detail Invoice
+
+                // Section 1: Detail Client
+                Section::make('Informasi Quotation')->schema([
+                    Grid::make(3)->schema([
+                        Select::make('is_active')
+                            ->label('Ambil dari Quotation?')
+                            ->belowContent('Hubungkan dengan Quotation jika project-nya sama')
+                            ->options([
+                                'no' => 'Tidak',
+                                'yes' => 'Ya',
+                            ])
+                            ->live()
+                            ->native(false)
+                            ->default('no')
+                            ->required()
+                            ->dehydrated(false)
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (! $state || $state === 'no') {
+                                    $set('quotation_id', null);
+                                    return;
+                                }
+                            }),
+
+                        Select::make('quotation_id')
+                            ->label('Pilih Quotation')
+                            ->belowContent('Hanya yang berstatus INVOICED yang dapat dipilih')
+                            ->relationship(
+                                name: 'quotation',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn($query) => $query->where('status', 'invoiced'),
+                            )
+                            ->getOptionLabelFromRecordUsing(
+                                fn($record) =>
+                                "{$record->name} - {$record->company}"
+                            )
+                            ->searchable(['company', 'name'])
+                            ->preload()
+                            ->required()
+                            ->live()
+                            ->visible(fn($get) => $get('is_active') === 'yes')
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (! $state) {
+                                    $set('client_name', null);
+                                    return;
+                                }
+                                $quotation = Quotation::find($state);
+                                $set('client_name', $quotation?->client?->name);
+                            })
+                            ->noOptionsMessage('Belum ada Quotation'),
+
+                        TextInput::make('client_name')
+                            ->visible(fn($get) => $get('is_active') === 'yes')
+                            ->label('Nama Klien')
+                            ->belowContent('Nama otomatis terisi sesuai quotation')
+                            ->disabled()
+                            ->dehydrated(false)
+                    ])
+                ])->collapsible(),
+
+                // Section 2: Detail Invoice
                 Section::make('Detail Invoice')->schema([
                     Grid::make(3)->schema([
                         Select::make('status')
@@ -66,9 +125,8 @@ class InvoiceForm
                             ->default('unpaid')
                             ->native(false),
                         DatePicker::make('invoice_date')
-                            ->default(now())
                             ->native(false)
-                            ->displayFormat('d F Y')
+                            ->displayFormat('d/m/Y')
                             ->required(),
                         DatePicker::make('due_date')
                             ->native(false)
@@ -76,54 +134,6 @@ class InvoiceForm
                             ->required(),
                     ])
                 ])->collapsible(),
-
-
-                // Section 2: Detail Client
-                Section::make('Detail Client')->schema([
-                    Grid::make(2)->schema([
-                        // Kolom Kiri
-                        Section::make()->schema([
-                            Select::make('client_id')
-                                ->label('Name')
-                                ->relationship('client', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->live()
-                                ->afterStateUpdated(function ($state, $set) {
-                                    $client = Client::find($state);
-                                    if ($client) {
-                                        $set('client_name', $client->name);
-                                        $set('client_email', $client->email);
-                                        $set('client_phone', $client->phone);
-                                        $set('client_address', $client->address);
-                                        $set('client_city', $client->city);
-                                        $set('client_country', $client->country);
-                                    }
-                                })
-                                ->createOptionForm([
-                                    TextInput::make('name')->required(),
-                                    TextInput::make('email')->email(),
-                                    TextInput::make('phone')->tel(),
-                                    TextInput::make('address'),
-                                    TextInput::make('city'),
-                                    TextInput::make('country'),
-                                ])
-                                ->required(),
-                            Hidden::make('client_name')->dehydrated(),
-                            TextInput::make('client_email')->label('Email')->disabled()->dehydrated(),
-                            TextInput::make('client_phone')->label('Phone')->disabled()->dehydrated(),
-                        ])->contained(false),
-
-                        // Kolom Kanan
-                        Section::make()->schema([
-                            TextInput::make('company')->label('Company')->required(),
-                            TextInput::make('client_address')->label('Address')->disabled()->dehydrated(),
-                            TextInput::make('client_city')->label('City')->disabled()->dehydrated(),
-                            TextInput::make('client_country')->label('Country')->disabled()->dehydrated(),
-                        ])->contained(false),
-                    ])
-                ])->collapsible(),
-
 
                 //Section 3: Detail Items
                 Section::make('Detail Items')->schema([
@@ -201,6 +211,7 @@ class InvoiceForm
                         ->addActionLabel('Add item'),
                 ])->collapsible(),
 
+                //Section 4: Detail Items
                 Section::make('Summary')->schema([
                     Section::make()->schema([
                         TextInput::make('note')->columnSpan(6),
