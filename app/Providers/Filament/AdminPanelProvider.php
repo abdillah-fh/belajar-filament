@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->font('Plus Jakarta Sans')
             ->colors([
                 'primary' => Color::Green,
             ])
@@ -52,11 +53,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
                 fn(): View => view('filament.hooks.create-invoice-button'),
             )
-            ->userMenuItems([
-                Action::make('settings')
-                    ->url(fn(): string => Settings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth'),
-            ])
+            // ->userMenuItems([
+            //     Action::make('settings')
+            //         ->url(fn(): string => Settings::getUrl())
+            //         ->icon('heroicon-o-cog-6-tooth'),
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -72,6 +73,11 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             // ->topNavigation()
+            ->navigationGroups([
+                'Quotation',
+                'Invoice',
+                'User Management',
+            ])
             ->sidebarCollapsibleOnDesktop()
             // ->sidebarFullyCollapsibleOnDesktop()
             ->sidebarWidth('14rem')
