@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->favicon(asset('img/logo-no-text.png'))
             ->font('Plus Jakarta Sans')
             ->colors([
                 'primary' => Color::Green,
