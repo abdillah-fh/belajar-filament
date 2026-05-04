@@ -26,6 +26,7 @@ class QuotationsTable
                 TextColumn::make('id')
                     ->label('Nomor')
                     ->searchable()
+                    ->sortable()
                     ->state(fn(Quotation $record): string => 'QUO-0000' . $record->id)
                     ->color('info'),
                 TextColumn::make('name')
@@ -39,7 +40,7 @@ class QuotationsTable
                     ->toggleable(),
                 TextColumn::make('quo_date')
                     ->label('Tanggal')
-                    ->date('d F y')
+                    ->date('d M y')
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('note')

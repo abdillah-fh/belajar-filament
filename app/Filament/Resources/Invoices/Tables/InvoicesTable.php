@@ -53,10 +53,14 @@ class InvoicesTable
                     ->toggleable(),
                 TextColumn::make('client.name')
                     ->label('Klien')
+                    ->description(function (Invoice $record) {
+                        return $record->company;
+                    })
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('company')
-                    ->label('Perusahaan')
+                TextColumn::make('invoice_date')
+                    ->label('Tanggal')
+                    ->date('d M y')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('items.item_name')
