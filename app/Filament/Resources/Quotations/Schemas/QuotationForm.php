@@ -105,12 +105,18 @@ class QuotationForm
                                     }
                                 })
                                 ->createOptionForm([
-                                    TextInput::make('name')->required(),
-                                    TextInput::make('email')->email(),
-                                    TextInput::make('phone')->tel(),
-                                    TextInput::make('address'),
-                                    TextInput::make('city'),
-                                    TextInput::make('country'),
+                                    Grid::make(2)->schema([
+                                        Section::make()->schema([
+                                            TextInput::make('name')->required(),
+                                            TextInput::make('email')->email(),
+                                            TextInput::make('phone')->tel(),
+                                        ])->contained(false),
+                                        Section::make()->schema([
+                                            TextInput::make('address'),
+                                            TextInput::make('city'),
+                                            TextInput::make('country'),
+                                        ])->contained(false),
+                                    ])
                                 ])
                                 ->required(),
                             Hidden::make('client_name')->dehydrated(),
