@@ -69,9 +69,9 @@ class QuotationForm
                                 'rejected' => 'REJECTED',
                                 'invoiced' => 'INVOICED',
                             ])
-                            ->required()
                             ->default('sent')
-                            ->native(false),
+                            ->native(false)
+                            ->required(),
                         DatePicker::make('quo_date')
                             ->label('Tanggal')
                             ->default(now())
@@ -118,6 +118,7 @@ class QuotationForm
                                         ])->contained(false),
                                     ])
                                 ])
+                                ->noOptionsMessage('Belum ada klien')
                                 ->required(),
                             Hidden::make('client_name')->dehydrated(),
                             TextInput::make('client_email')->label('Email')->disabled()->dehydrated(),
@@ -210,15 +211,17 @@ class QuotationForm
 
                         ])
                         ->columns(12)
-                        ->addActionLabel('Add item'),
+                        ->addActionLabel('Tambah produk'),
                 ])->collapsible(),
 
+                // Section 4: Summary
                 Section::make('Summary')->schema([
                     Section::make()->schema([
                         TextInput::make('note')->label('Catatan')->columnSpan(6),
 
                         TextInput::make('discount_percentage')
                             ->label('Diskon %')
+                            ->placeholder('0')
                             ->required()
                             ->numeric()
                             ->suffix('%')
@@ -229,6 +232,7 @@ class QuotationForm
 
                         TextInput::make('tax_percentage')
                             ->label('Pajak %')
+                            ->placeholder('0')
                             ->required()
                             ->numeric()
                             ->suffix('%')
