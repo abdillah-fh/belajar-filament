@@ -15,6 +15,7 @@ class InvoiceChart extends ChartWidget
     protected function getData(): array
     {
         $data = Trend::model(Invoice::class)
+            ->dateColumn('invoice_date')
             ->between(
                 start: now()->startOfYear(),
                 end: now()->endOfYear(),
