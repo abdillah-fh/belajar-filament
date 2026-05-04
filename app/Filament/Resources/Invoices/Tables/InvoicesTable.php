@@ -36,8 +36,7 @@ class InvoicesTable
                     ->color('primary')
                     ->sortable()
                     ->searchable()
-                    ->state(fn(Invoice $record): string => 'INV-0000' . $record->id)
-                    ->toggleable(),
+                    ->state(fn(Invoice $record): string => 'INV-0000' . $record->id),
                 TextColumn::make('quotation.name')
                     ->label('Sumber Quotation')
                     ->placeholder('Tanpa Quotation')
@@ -63,6 +62,11 @@ class InvoicesTable
                 TextColumn::make('items.item_name')
                     ->label('Item')
                     ->listWithLineBreaks()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('note')
+                    ->label('Catatan')
+                    ->placeholder('-')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('status')
@@ -100,8 +104,7 @@ class InvoicesTable
                                     ->success()
                                     ->send();
                             })
-                    )
-                    ->toggleable(),
+                    ),
                 // SelectColumn::make('status')
                 //     ->options([
                 //         'unpaid' => 'UNPAID',
