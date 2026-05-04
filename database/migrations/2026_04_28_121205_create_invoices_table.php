@@ -14,10 +14,20 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->foreignId('quotation_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('status')->default('unpaid'); // unpaid, pending, paid
             $table->date('invoice_date');
             $table->date('due_date');
+
+            // Informasi Client saat invoice dibuat (Snapshot)
+            $table->string('client_name')->nullable();
+            $table->string('client_email')->nullable();
+            $table->string('client_phone')->nullable();
+            $table->string('client_address')->nullable();
+            $table->string('client_city')->nullable();
+            $table->string('client_country')->nullable();
+            $table->string('company')->nullable();
 
             $table->text('note')->nullable();
             $table->integer('tax_percentage')->default(0);

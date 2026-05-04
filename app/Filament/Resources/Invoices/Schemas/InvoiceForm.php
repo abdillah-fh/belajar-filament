@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Schemas;
 
+use App\Models\Client;
 use App\Models\Quotation;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -66,7 +67,6 @@ class InvoiceForm
                             ])
                             ->live()
                             ->native(false)
-                            ->default('no')
                             ->required()
                             ->dehydrated(false)
                             ->afterStateUpdated(function ($state, callable $set) {
@@ -96,10 +96,23 @@ class InvoiceForm
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if (! $state) {
                                     $set('client_name', null);
+                                    $set('client_email', null);
+                                    $set('client_phone', null);
+                                    $set('client_address', null);
+                                    $set('client_city', null);
+                                    $set('client_country', null);
+                                    $set('company', null);
                                     return;
                                 }
                                 $quotation = Quotation::find($state);
+                                $set('client_id', $quotation?->client?->id);
                                 $set('client_name', $quotation?->client?->name);
+                                $set('client_email', $quotation?->client?->email);
+                                $set('client_phone', $quotation?->client?->phone);
+                                $set('client_address', $quotation?->client?->address);
+                                $set('client_city', $quotation?->client?->city);
+                                $set('client_country', $quotation?->client?->country);
+                                $set('company', $quotation?->company);
                             })
                             ->noOptionsMessage('Belum ada Quotation'),
 
@@ -134,6 +147,61 @@ class InvoiceForm
                             ->native(false)
                             ->displayFormat('d F Y')
                             ->required(),
+                    ])
+                ])->collapsible(),
+
+
+                // Section 2: Detail Client
+                Section::make('Detail Klien')->schema([
+                    Grid::make(2)->schema([
+                        // Kolom Kiri
+                        Section::make()->schema([
+                            Select::make('client_id')
+                                ->label('Nama Klien')
+                                ->relationship('client', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                // ->visible(fn($get) => $get('is_active') === 'no' || $get('is_active') === null)
+                                ->afterStateUpdated(function ($state, $set) {
+                                    $client = Client::find($state);
+                                    if ($client) {
+                                        $set('client_name', $client->name);
+                                        $set('client_email', $client->email);
+                                        $set('client_phone', $client->phone);
+                                        $set('client_address', $client->address);
+                                        $set('client_city', $client->city);
+                                        $set('client_country', $client->country);
+                                    }
+                                })
+                                ->createOptionForm([
+                                    Grid::make(2)->schema([
+                                        Section::make()->schema([
+                                            TextInput::make('name')->required(),
+                                            TextInput::make('email')->email(),
+                                            TextInput::make('phone')->tel(),
+                                        ])->contained(false),
+                                        Section::make()->schema([
+                                            TextInput::make('address'),
+                                            TextInput::make('city'),
+                                            TextInput::make('country'),
+                                        ])->contained(false),
+                                    ])
+                                ])
+                                ->noOptionsMessage('Belum ada klien')
+                                ->required(),
+                            Hidden::make('client_name')->dehydrated(),
+                            TextInput::make('client_email')->label('Email')->disabled()->dehydrated(),
+                            TextInput::make('client_phone')->label('No HP')->disabled()->dehydrated(),
+                        ])->contained(false),
+
+                        // Kolom Kanan
+                        Section::make()->schema([
+                            TextInput::make('company')->label('Perusahaan')->required(),
+                            TextInput::make('client_address')->label('Alamat')->disabled()->dehydrated(),
+                            TextInput::make('client_city')->label('Kota/Kab')->disabled()->dehydrated(),
+                            TextInput::make('client_country')->label('Negara')->disabled()->dehydrated(),
+                        ])->contained(false),
                     ])
                 ])->collapsible(),
 
@@ -218,7 +286,8 @@ class InvoiceForm
                 //Section 4: Detail Items
                 Section::make('Summary')->schema([
                     Section::make()->schema([
-                        TextInput::make('Catatan')->columnSpan(6),
+                        TextInput::make('note')->columnSpan(6)
+                            ->label('Catatan'),
 
                         TextInput::make('discount_percentage')
                             ->label('Diskon %')

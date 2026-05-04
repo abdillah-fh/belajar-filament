@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Invoices\Tables;
 
 use App\Models\Invoice;
+use App\Models\Quotation;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -14,6 +15,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -31,28 +33,36 @@ class InvoicesTable
                 //     ->searchable(),
                 TextColumn::make('id')
                     ->label('Nomor')
+                    ->color('primary')
                     ->sortable()
                     ->searchable()
                     ->state(fn(Invoice $record): string => 'INV-0000' . $record->id)
                     ->toggleable(),
                 TextColumn::make('quotation.name')
-                    ->label('Nama')
+                    ->label('Sumber Quotation')
+                    ->placeholder('Tanpa Quotation')
                     ->description(function (Invoice $record) {
-                        $date = Carbon::parse($record->due_date)->format('d M Y');
-                        return new HtmlString("<span style='color:oklch(70.4% 0.191 22.216);'>Due: {$date}</span>");
+                        $no = $record->quotation?->id;
+                        if (! $no) {
+                            return '-';
+                        }
+                        return new \Illuminate\Support\HtmlString(
+                            "<span style='color:oklch(68.5% 0.169 237.323);'>QUO-0000{$no}</span>"
+                        );
                     })
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('quotation.company')
+                TextColumn::make('client.name')
+                    ->label('Klien')
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('company')
                     ->label('Perusahaan')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('items.item_name')
-                    ->label('Keterangan')
+                    ->label('Item')
                     ->listWithLineBreaks()
-                    // ->badge()
-                    // ->color('info')
-                    // ->limit(1)
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('status')
@@ -109,6 +119,7 @@ class InvoicesTable
                 //     }),
                 TextColumn::make('total_amount')
                     ->label('Total')
+                    ->summarize(Sum::make()->money('idr', decimalPlaces: 0))
                     ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
                     ->sortable()
                     ->toggleable(),

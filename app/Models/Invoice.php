@@ -25,4 +25,9 @@ class Invoice extends Model
     {
         return $this->belongsTo(Quotation::class);
     }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
 }
