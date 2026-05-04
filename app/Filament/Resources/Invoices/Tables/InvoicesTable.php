@@ -30,34 +30,31 @@ class InvoicesTable
                 // TextColumn::make('team.name')
                 //     ->searchable(),
                 TextColumn::make('id')
-                    ->label('No')
+                    ->label('Nomor')
                     ->sortable()
                     ->searchable()
                     ->state(fn(Invoice $record): string => 'INV-0000' . $record->id)
-                    ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('client.name')
-                    ->label('Name')
+                    ->toggleable(),
+                TextColumn::make('quotation.name')
+                    ->label('Nama')
                     ->description(function (Invoice $record) {
                         $date = Carbon::parse($record->due_date)->format('d M Y');
                         return new HtmlString("<span style='color:oklch(70.4% 0.191 22.216);'>Due: {$date}</span>");
                     })
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(),
+                TextColumn::make('quotation.company')
+                    ->label('Perusahaan')
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('items.item_name')
-                    ->label('Products')
+                    ->label('Keterangan')
                     ->listWithLineBreaks()
                     // ->badge()
                     // ->color('info')
                     // ->limit(1)
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('company')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('total_amount')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->headerTooltip('Klik status untuk mengubah')
                     ->badge()
@@ -94,7 +91,7 @@ class InvoicesTable
                                     ->send();
                             })
                     )
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(),
                 // SelectColumn::make('status')
                 //     ->options([
                 //         'unpaid' => 'UNPAID',
@@ -110,6 +107,11 @@ class InvoicesTable
                 //             ->success()
                 //             ->send();
                 //     }),
+                TextColumn::make('total_amount')
+                    ->label('Total')
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

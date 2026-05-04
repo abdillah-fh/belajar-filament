@@ -125,10 +125,12 @@ class InvoiceForm
                             ->default('unpaid')
                             ->native(false),
                         DatePicker::make('invoice_date')
+                            ->label('Tanggal Invoice')
                             ->native(false)
-                            ->displayFormat('d/m/Y')
+                            ->displayFormat('d F Y')
                             ->required(),
                         DatePicker::make('due_date')
+                            ->label('Tanggal Jatuh Tempo')
                             ->native(false)
                             ->displayFormat('d F Y')
                             ->required(),
@@ -136,19 +138,20 @@ class InvoiceForm
                 ])->collapsible(),
 
                 //Section 3: Detail Items
-                Section::make('Detail Items')->schema([
+                Section::make('Detail Produk/Layanan')->schema([
                     Repeater::make('items')
-                        ->label('Item')
+                        ->label('Detail')
                         ->relationship('items')
                         ->live()
                         ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set))
                         ->schema([
                             TextInput::make('item_name')
+                                ->label('Produk/Layanan')
                                 ->required()
                                 ->columnSpan(['lg' => 12, 'xl' => 5]),
 
                             TextInput::make('quantity')
-                                ->label('Qty')
+                                ->label('Jumlah')
                                 ->numeric()
                                 ->minValue(1)
                                 ->default(1)
@@ -168,6 +171,7 @@ class InvoiceForm
                                 }),
 
                             TextInput::make('unit_price')
+                                ->label('Harga Satuan')
                                 ->numeric()
                                 ->prefix('Rp')
                                 ->required()
@@ -193,7 +197,7 @@ class InvoiceForm
                                 }),
 
                             TextInput::make('subtotal_display')
-                                ->label('Subtotal')
+                                ->label('Total')
                                 ->prefix('Rp')
                                 ->disabled()
                                 ->dehydrated(false)
@@ -214,10 +218,10 @@ class InvoiceForm
                 //Section 4: Detail Items
                 Section::make('Summary')->schema([
                     Section::make()->schema([
-                        TextInput::make('note')->columnSpan(6),
+                        TextInput::make('Catatan')->columnSpan(6),
 
                         TextInput::make('discount_percentage')
-                            ->label('Discount %')
+                            ->label('Diskon %')
                             ->required()
                             ->numeric()
                             ->suffix('%')
@@ -227,7 +231,7 @@ class InvoiceForm
                             ->afterStateUpdated(fn($get, $set) => self::updateGrandTotal($get, $set)),
 
                         TextInput::make('tax_percentage')
-                            ->label('Tax %')
+                            ->label('Pajak %')
                             ->required()
                             ->numeric()
                             ->suffix('%')
