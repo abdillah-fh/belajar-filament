@@ -21,7 +21,7 @@ class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
 
-    protected static string | UnitEnum | null $navigationGroup = 'Invoice';
+    protected static string | UnitEnum | null $navigationGroup = 'Quotation';
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUserPlus;
 
@@ -46,8 +46,8 @@ class ClientResource extends Resource
     {
         return [
             'index' => ListClients::route('/'),
-            'create' => CreateClient::route('/create'),
-            'edit' => EditClient::route('/{record}/edit'),
+            // 'create' => CreateClient::route('/create'),
+            // 'edit' => EditClient::route('/{record}/edit'),
         ];
     }
 
