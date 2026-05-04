@@ -10,6 +10,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
@@ -21,7 +22,6 @@ class QuotationsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->recordUrl(null)
             ->columns([
                 TextColumn::make('id')
                     ->label('Nomor')
@@ -39,8 +39,13 @@ class QuotationsTable
                     ->toggleable(),
                 TextColumn::make('quo_date')
                     ->label('Tanggal')
-                    ->date('d/m/y')
+                    ->date('d F y')
                     ->sortable()
+                    ->toggleable(),
+                TextColumn::make('note')
+                    ->label('Catatan')
+                    ->placeholder('-')
+                    ->searchable()
                     ->toggleable(),
                 TextColumn::make('status')
                     ->headerTooltip('Klik status untuk mengubah')
@@ -103,8 +108,24 @@ class QuotationsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('Lihat'),
+                Action::make('cetak_pdf')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success') // Memberi warna hijau
+                    // ->url(fn(Quotation $record) => route('quotation.pdf', $record))
+                    ->openUrlInNewTab() // Buka di tab baru agar aplikasi tidak tertutup
+                    ->iconButton()
+                    ->tooltip('Download'),
+                EditAction::make()
+                    ->color('warning')
+                    ->iconButton()
+                    ->tooltip('Edit'),
+                DeleteAction::make()
+                    ->color('danger')
+                    ->iconButton()
+                    ->tooltip('Delete'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
