@@ -4,9 +4,12 @@ namespace App\Filament\Widgets;
 
 use App\Models\Invoice;
 use Filament\Widgets\ChartWidget;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 
 class StatusChart extends ChartWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?int $sort = 3;
     protected ?string $heading = 'Status Invoice';
 

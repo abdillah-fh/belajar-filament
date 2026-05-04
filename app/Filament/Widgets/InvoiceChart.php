@@ -6,9 +6,12 @@ use App\Models\Invoice;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 
 class InvoiceChart extends ChartWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?int $sort = 2;
     protected ?string $heading = 'Monthly Reports';
 
