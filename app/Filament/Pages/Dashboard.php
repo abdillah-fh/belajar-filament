@@ -29,7 +29,7 @@ class Dashboard extends BaseDashboard
                             'year' => 'Tahun Ini',
                             'custom' => 'Pilih tanggal',
                         ])
-                        ->default('all')
+                        ->default('year')
                         ->live()
                         ->native(false)
                         ->afterStateUpdated(function ($state, callable $set) {
