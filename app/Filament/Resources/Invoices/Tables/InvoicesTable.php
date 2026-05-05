@@ -62,6 +62,7 @@ class InvoicesTable
                     ->label('Tanggal')
                     ->date('d M y')
                     ->searchable()
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('items.item_name')
                     ->label('Item')
