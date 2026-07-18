@@ -73,8 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             // ->topNavigation()
             ->navigationGroups([
-                'Quotation',
-                'Invoice',
+                'Quo & Invoice',
                 'User Management',
             ])
             ->sidebarCollapsibleOnDesktop()

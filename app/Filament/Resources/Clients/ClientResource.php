@@ -21,7 +21,7 @@ class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
 
-    protected static string | UnitEnum | null $navigationGroup = 'Quotation';
+    // protected static string | UnitEnum | null $navigationGroup = 'Quotation';
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUserPlus;
 

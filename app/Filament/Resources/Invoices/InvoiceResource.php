@@ -21,9 +21,9 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
+    protected static ?int $navigationSort = 2;
 
-
-    protected static string | UnitEnum | null $navigationGroup = 'Invoice';
+    protected static string | UnitEnum | null $navigationGroup = 'Quo & Invoice';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     public static function form(Schema $schema): Schema

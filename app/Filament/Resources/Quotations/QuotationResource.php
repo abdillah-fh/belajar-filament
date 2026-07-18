@@ -23,9 +23,11 @@ class QuotationResource extends Resource
 {
     protected static ?string $model = Quotation::class;
 
-    protected static string | UnitEnum | null $navigationGroup = 'Quotation';
+    protected static string | UnitEnum | null $navigationGroup = 'Quo & Invoice';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentPlus;
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'name';
 

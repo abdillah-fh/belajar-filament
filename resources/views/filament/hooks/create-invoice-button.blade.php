@@ -7,7 +7,7 @@
 @if ($tenant)
 	<div class="flex items-center me-4">
 		<x-filament::button href="{{ \App\Filament\Resources\Invoices\InvoiceResource::getUrl('create', ['tenant' => $tenant]) }}" tag="a" color="primary" size="sm" icon="heroicon-o-plus" tooltip="Buat Invoice Baru">
-			Create Invoice
+			Buat Invoice
 		</x-filament::button>
 	</div>
 @endif
