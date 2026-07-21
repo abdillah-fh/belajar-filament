@@ -12,13 +12,17 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class InvoicesTable
@@ -38,7 +42,7 @@ class InvoicesTable
                     ->searchable()
                     ->state(fn(Invoice $record): string => 'INV-0000' . $record->id),
                 TextColumn::make('quotation.name')
-                    ->label('Sumber Quotation')
+                    ->label('Sumber Quotation (Nama proyek)')
                     ->placeholder('Tanpa Quotation')
                     ->description(function (Invoice $record) {
                         $no = $record->quotation?->id;
@@ -73,7 +77,7 @@ class InvoicesTable
                     ->label('Catatan')
                     ->placeholder('-')
                     ->searchable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->headerTooltip('Klik status untuk mengubah')
                     ->badge()
@@ -125,6 +129,18 @@ class InvoicesTable
                 //             ->success()
                 //             ->send();
                 //     }),
+                TextColumn::make('subtotal')
+                    ->label('Subtotal')
+                    ->summarize(Sum::make()->money('idr', decimalPlaces: 0))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('tax_amount')
+                    ->label('PPN')
+                    ->summarize(Sum::make()->money('idr', decimalPlaces: 0))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('total_amount')
                     ->label('Total')
                     ->summarize(Sum::make()->money('idr', decimalPlaces: 0))
@@ -145,6 +161,39 @@ class InvoicesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Filter::make('invoice_date')
+                    ->schema([
+                        DatePicker::make('created_from')
+                            ->label('Dari'),
+                        DatePicker::make('created_until')
+                            ->label('Sampai'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('invoice_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('invoice_date', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make('Dari ' . Carbon::parse($data['created_from'])->toFormattedDateString())
+                                ->removeField('created_from');
+                        }
+
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make('Sampai ' . Carbon::parse($data['created_until'])->toFormattedDateString())
+                                ->removeField('created_until');
+                        }
+
+                        return $indicators;
+                    }),
                 TrashedFilter::make(),
             ])
             ->recordActions([

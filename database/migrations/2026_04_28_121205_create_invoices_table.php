@@ -32,6 +32,11 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->integer('tax_percentage')->default(0);
             $table->integer('discount_percentage')->default(0);
+
+            $table->bigInteger('subtotal')->default(0);
+            $table->bigInteger('discount_amount')->default(0);
+            $table->bigInteger('tax_amount')->default(0);
+            $table->bigInteger('total_pph_amount')->default(0);
             $table->bigInteger('total_amount')->default(0);
 
             $table->timestamps();
