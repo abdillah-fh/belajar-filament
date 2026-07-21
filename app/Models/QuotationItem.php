@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuotationItem extends Model
 {
+    protected $casts = [
+        'is_pph' => 'boolean',
+    ];
+
     public function quotation(): BelongsTo
     {
         return $this->belongsTo(Quotation::class);

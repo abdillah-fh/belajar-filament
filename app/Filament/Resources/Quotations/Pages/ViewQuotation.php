@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
 
@@ -32,41 +33,70 @@ class ViewQuotation extends ViewRecord
         return $schema
             ->components([
                 Section::make('Detail Quotation')->schema([
-                    Grid::make(2)->schema([
-                        TextEntry::make('name')
-                            ->label('Nama Quotation:')
-                            ->belowContent(
-                                Text::make('Nomor')
-                                    ->content(fn(Quotation $record): string => 'QUO-0000' . $record->id)
-                                    ->color('info')
-                                    ->size(TextSize::Large)
-                                    ->badge(),
-                            )
-                            ->size(TextSize::Large),
-                        TextEntry::make('status')
-                            ->badge()
-                            ->formatStateUsing(fn($state) => strtoupper($state))
-                            ->color(fn(string $state): string => match ($state) {
-                                'sent' => 'warning',
-                                'rejected' => 'danger',
-                                'approved' => 'info',
-                                'invoiced' => 'success',
-                            })
-                            ->size(TextSize::Large),
+                    Grid::make(['xl' => 3, 'lg' => 2])->schema([
+                        Section::make()->schema([
+                            TextEntry::make('name')
+                                ->label('Nama Proyek:')
+                                ->size(TextSize::Large),
 
-                        TextEntry::make('client.name')
-                            ->label('Klien:')
-                            ->size(TextSize::Large),
-                        TextEntry::make('total_amount')
-                            ->label('Total:')
-                            ->size(TextSize::Large)
-                            ->money('idr', decimalPlaces: 0),
-                        TextEntry::make('note')
-                            ->label('Catatan:')
-                            ->size(TextSize::Large),
+                            TextEntry::make('id')
+                                ->label('Nomor')
+                                ->state(fn(Quotation $record): string => 'QUO-0000' . $record->id)
+                                ->color('info')
+                                ->badge()
+                                ->inlinelabel(),
+
+                            TextEntry::make('client.name')
+                                ->label('Klien')
+                                ->inlinelabel(),
+
+                            TextEntry::make('status')
+                                ->label('Status')
+                                ->badge()
+                                ->formatStateUsing(fn($state) => strtoupper($state))
+                                ->color(fn(string $state): string => match ($state) {
+                                    'sent' => 'warning',
+                                    'rejected' => 'danger',
+                                    'approved' => 'info',
+                                    'invoiced' => 'success',
+                                })
+                                ->inlinelabel()
+                                ->size(TextSize::Large),
+
+                            TextEntry::make('note')
+                                ->label('Catatan')
+                                ->inlinelabel()
+                                ->placeholder('-'),
+
+                        ]),
+                        Section::make()->schema([
+                            TextEntry::make('Rincian Biaya'),
+                            TextEntry::make('subtotal')
+                                ->label('Harga proyek')
+                                ->inlinelabel()
+                                ->weight(FontWeight::Bold)
+                                ->money('idr', decimalPlaces: 0),
+
+                            TextEntry::make('tax_amount')
+                                ->label('PPN (11%)')
+                                ->inlinelabel()
+                                ->weight(FontWeight::Bold)
+                                ->money('idr', decimalPlaces: 0),
+                            TextEntry::make('total_pph_amount')
+                                ->label('PPh 23 (2%)')
+                                ->inlinelabel()
+                                ->weight(FontWeight::Bold)
+                                ->money('idr', decimalPlaces: 0),
+                            TextEntry::make('total_amount')
+                                ->label('Total')
+                                ->inlinelabel()
+                                ->weight(FontWeight::Bold)
+                                ->money('idr', decimalPlaces: 0),
+                        ]),
+
                     ]),
                     RepeatableEntry::make('items')
-                        ->label('Detail Produk:')
+                        ->label('Detail item:')
                         ->table([
                             TableColumn::make('Produk'),
                             TableColumn::make('Jml'),
